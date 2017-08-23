@@ -1,0 +1,25 @@
+{
+  "name": "blueentities",
+  "version": "0.0.1",
+  "description": "Entities management for Redis database",
+  "main": "blueentities.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "keywords": [
+    "blueentitites",
+    "redis"
+  ],
+  "author": "Rafa G. Blanes",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/gomezbl/blueentities.git"
+  },
+  "homepage": "https://github.com/gomezbl/blueentities#readme",
+  "dependencies": {
+    "chai": "^4.0.2",
+    "redis": "^2.7.1",
+    "shortid": "^2.2.8"
+  }
+}
