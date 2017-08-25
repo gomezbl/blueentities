@@ -1,4 +1,4 @@
-#Blue Entities
+# Blue Entities
 
 ## Easy Redis entities management
 
@@ -50,7 +50,5 @@ blueEntities.getEntity( "users", id )
 ```
 
 Yeap!!!, cool, right?
-
-Node module to be published at GitHub in a few weeks.
 
 This is not a fully ORM solution based on Redis, but a module that allows to simplify using Redis repository entities as plain tables for high availability projects with real time performance needs.
