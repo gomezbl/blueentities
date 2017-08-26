@@ -18,20 +18,26 @@ var schema = {
       { name: "password", type: "string" },
       { name: "active", type: "boolean" },
       { name: "age", type: "integer" }
+   ],
+   name: "books",
+   properties: [
+      { name: "title", type: "string" },
+      { name: "subject", type: "string" },
+      { name: "author", type: "string" }      
    ]
 }
 
 var redisConfig = { host: "localhost", port: 6379 };
 var blueEntities = require("blueentities")(schema, redisConfig );
 
-var myEntity = {
+var newUser = {
    mail: "info@solidstack.es",
    password: "123454321",
    active: true,
    age: 43
 }
 
-blueEntities.addEntity( "users", myEntity )
+blueEntities.addEntity( "users", newUser )
 	.then( (id) => {
 		// User added!!!
 	});
@@ -41,9 +47,9 @@ blueEntities.addEntity( "users", myEntity )
 Given that sample, to get the entity is a matter of just a few lines:
 
 ```
-var id = "HknG7QVZ7-"
+var userId = "HknG7QVZ7-"
 
-blueEntities.getEntity( "users", id )
+blueEntities.getEntity( "users", userId )
 	.then( (user) => {
 		// user json object pull out from Redis!
 	});
@@ -52,3 +58,29 @@ blueEntities.getEntity( "users", id )
 Yeap!!!, cool, right?
 
 This is not a fully ORM solution based on Redis, but a module that allows to simplify using Redis repository entities as plain tables for high availability projects with real time performance needs.
+
+## Blueentities API
+
+### addEntitySchema( entitySchema )
+
+### addEntity( entityName, entityProperties, entityId )
+
+### addEntities( entityName, entities )
+
+### getEntity( entityName, entityId )
+
+### getCount( entityName )
+
+### getRange( entityName, start, stop )
+
+### removeEntity( entityName, entityId )
+
+### removeEntities( entityName, entitiesIds )
+
+### cleanSchemaEntities()
+
+### getUniqueId()
+
+### shutdown()
+
+## Samples
