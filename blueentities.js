@@ -91,7 +91,7 @@ class BlueEntity {
 	}
 
 	_checkProperties( valuesToHset, entityName ) {
-		var properties = Object.keys(valuesToHset);
+		var properties = Object.keys(valuesToHset);		
 
 		for( let i = 0; i < properties.length; i++ ) {
 			var check = this._checkProperty( properties[i], valuesToHset[properties[i]], entityName );
@@ -172,15 +172,19 @@ class BlueEntity {
 	 * Params:
 	 *   entityName: name of the entity, it should be defined in the schema
 	 *   entityProperties: array with properties and its values: [ { propA: valueA }, { propB: valueB }... ]
+	 *   entityId: unique ID for the new entity (optional). Should be an string with 8 characters.
+	 *             If it is not set, addEntity will generate a new one.
+	 *			   If an unique ID is needed before calling addEntity(), getUniqueId() method can be used
+	 *			   to guarantee no conflicts.
 	 * Returns a promise with the entity id created
 	 */
-	addEntity( entityName, entityProperties ) {
+	addEntity( entityName, entityProperties, entityId ) {
 		if ( this._entitiesNames[entityName] === undefined ) {
 			throw new Error( util.format("Unknown entity name of '%s' when adding new entity", entityName ) );
 		}
 
 		var valuesToHset = [];
-		var entityId = shortid.generate();
+		entityId = entityId === undefined ? shortid.generate() : entityId;
 
 		// Creates array with properties to set: valuesToHset[<property name>] = <property value>
 		var propertiesKeys = Object.keys(entityProperties);
@@ -400,6 +404,13 @@ class BlueEntity {
 	 */
 	cleanSchemaEntities() {
 
+	}
+
+	/*
+	 * Returns a new and unique ID for a new entity
+	 */
+	getUniqueId() {
+		return shortid.generate();
 	}
 
 	/*

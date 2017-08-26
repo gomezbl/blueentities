@@ -77,9 +77,35 @@ describe( "Adding entities tests", (done) => {
 					})
 	});
 
+	it( "# Add simple entity given its id", (done) => {
+		let entityId = blueEntities.getUniqueId();
+
+		blueEntities.addEntity( "img", _getSampleEntity(), entityId )
+					.then( (id) => {
+						assert.isString(id);
+						assert.equal( entityId, id );
+						done();
+					})
+					.catch( (err) => {
+						done(err);
+					})
+	});
+
 	it( "# Add entity with missing properties", (done) => {
-		// TODO:...
-		done();
+		let entity = {
+			location: shortid.generate(),
+			filetype: "png",
+			size: Math.floor(Math.random()*1000),
+			checked: true
+		}
+
+		blueEntities.addEntity( "img", entity )
+					.then( (id) => {					
+						done( new Error("Exception expected in this test") );
+					})
+					.catch( (err) => {
+						done();
+					})
 	});
 
 	it( "# Add multiple entities", (done) => {
@@ -303,5 +329,15 @@ describe( "Pagination tests", () => {
 				iterate( 0, 20 );
 			})
 			.catch( (err) => { done(err); })
+	});
+});
+
+describe( "generate new ids test", () => {
+	it( "# Get new id", () => {
+		let entityId = blueEntities.getUniqueId();
+		assert.isString(entityId);
+		if ( !(entityId.length >= 7 && entityId.length <= 12) ) {
+			assert.isTrue( false );
+		}
 	});
 });

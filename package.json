@@ -1,6 +1,6 @@
 {
   "name": "blueentities",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Entities management for Redis database",
   "main": "blueentities.js",
   "scripts": {
