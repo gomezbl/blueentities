@@ -414,6 +414,13 @@ class BlueEntity {
 	}
 
 	/*
+	 * Returns information provided by Redis command "info"
+	 */
+	serverInfo() {
+		return this._redisClient.server_info;
+	}
+
+	/*
 	 * Closes internal connection with Redis server
 	 */
 	shutdown() {
