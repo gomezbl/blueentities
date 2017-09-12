@@ -29,4 +29,10 @@ describe( "Redis connection tests", () => {
 	it( "# Check connection failure with Redis server", () => {
 
 	});
+
+	it( "# Check server info", () => {
+		let serverInfo = blueEntities.serverInfo();
+
+		assert.isObject( serverInfo );
+	})
 })
