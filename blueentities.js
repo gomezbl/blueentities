@@ -258,6 +258,7 @@ class BlueEntity {
 	 * Params:
 	 * 	entityName: name of the entity
 	 * 	entityId: id for the entity instance to retrieve
+	 * Returns a promise. When completed, the result is a json object with the entity
 	 */
 	getEntity( entityName, entityId ) {
 		var key = this._getEntityKey(entityName, entityId);
@@ -291,6 +292,23 @@ class BlueEntity {
 					reject(err);
 				});
 		});
+	}
+
+	/*
+	 * Checks if an entity exists given its entity name and its ID
+	 * Params:
+	 * 	entityName: name of the entity
+	 * 	entityId: id for the entity instance to retrieve
+	 * Returns a promise. When completed, the result indicates if the entity exists (true) or not (false)
+	 */
+	existsEntity( entityName, entityId ) {
+		var key = this._getEntityKey(entityName, entityId);
+
+		return new Promise( (resolve,reject) => {
+			redisPromisified.exists( key )
+				.then( (exists) => { resolve(exists); })
+				.catch( (err) => { reject(err); })
+		}
 	}
 
 	/*

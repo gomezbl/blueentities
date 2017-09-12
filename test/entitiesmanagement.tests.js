@@ -145,6 +145,22 @@ describe( "Adding entities tests", (done) => {
 						done(err);
 					})
 	});
+
+	it( "# Add entity and check if exists", (done) => {
+		blueEntities.addEntity( "img", _getSampleEntity() )
+					.then( (id) => {
+						assert.isString(id);
+						return blueEntities.exists( id );
+					})
+					.then( (exists) => {
+						assert.isBoolean( exists );
+						assert.isTrue( exists );
+						done();
+					})
+					.catch( (err) => {
+						done(err);
+					})
+	});
 });
 
 describe( "Removing entities tests", () => {
