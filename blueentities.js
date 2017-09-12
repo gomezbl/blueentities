@@ -15,6 +15,7 @@ class BlueEntity {
 		this._redisClient = redis.createClient(redisConfig);
 		this._dbId = dbId ? dbId+":" : "";
 		this._redisConfig = redisConfig ? redisConfig : {};
+		this._schemaPropertyKeys = [];
 		this._entitiesSchema = [];
 		this._entitiesNames = [];
 
@@ -40,8 +41,8 @@ class BlueEntity {
 	}
 
 	_checkProperty( propertyName, propertyValue, entityName ) {
-		var sch = entityName + "." + propertyName;
-		var prop = this._entitiesSchema[ sch ];
+		var sch = this._getSchemaPropertyKey(entityName, propertyName);
+		var prop = this._schemaPropertyKeys[ sch ];
 		var res = { validated: true };
 		var t = typeof propertyValue;
 
@@ -147,11 +148,14 @@ class BlueEntity {
 	 *    properties: [
 	 *		{
 	 *			name: <property name>,
-	 *          type: <property type> (integer, datetime, string, boolean, etc.)
+	 *          type: <property type (integer, datetime, string, boolean, etc.),
+	 *			optional: <true|false, indicated if this property es optional>
+	 *			defaultValue: <default value is optional is true>
 	 *      },
 	 *      ...
 	 *	  ]
 	 * }
+	 * In properties, name and type properties are mandatory.
 	 */
 	addEntitySchema( entitySchema ) {
 		var check = this._checkEntitySchema( entitySchema );
@@ -161,17 +165,18 @@ class BlueEntity {
 		}
 
 		this._entitiesNames[entitySchema.name] = "";
+		this._entitiesSchema[entitySchema.name] = entitySchema.properties;
 
 		entitySchema.properties.map( (property) => {
-			this._entitiesSchema[ this._getSchemaPropertyKey(entitySchema.name, property.name) ] = property;
-		})
+			this._schemaPropertyKeys[ this._getSchemaPropertyKey(entitySchema.name, property.name) ] = property;
+		})		
 	}
 
 	/* 
 	 * Add new entity to repository.
 	 * Params:
 	 *   entityName: name of the entity, it should be defined in the schema
-	 *   entityProperties: array with properties and its values: [ { propA: valueA }, { propB: valueB }... ]
+	 *   entityProperties: array with properties and its values: [ propA: valueA, propB: valueB, ... ]
 	 *   entityId: unique ID for the new entity (optional). Should be an string with 8 characters.
 	 *             If it is not set, addEntity will generate a new one.
 	 *			   If an unique ID is needed before calling addEntity(), getUniqueId() method can be used
@@ -183,22 +188,52 @@ class BlueEntity {
 			throw new Error( util.format("Unknown entity name of '%s' when adding new entity", entityName ) );
 		}
 
-		var valuesToHset = [];
 		entityId = entityId === undefined ? shortid.generate() : entityId;
-
-		// Creates array with properties to set: valuesToHset[<property name>] = <property value>
-		var propertiesKeys = Object.keys(entityProperties);
-		
-		for( let i = 0; i < propertiesKeys.length; i++ ) {
-			var property = propertiesKeys[i];
-			var value = entityProperties[property];
-			
-			valuesToHset[property] = value;
-		}
 
 		return new Promise( (resolve, reject) => {
 			var promises = [];
-			var check = this._checkProperties( valuesToHset, entityName );
+			var check;
+
+			// Check if all properties are included and optional values
+			var schemaProperties = this._entitiesSchema[entityName];
+			
+			schemaProperties.forEach( (property) => {
+				// Property not set and not indicated as optional in schema
+				if ( entityProperties[property.name] === undefined && (property.optional === undefined || property.optional === false) ) {
+					reject( new Error( util.format("Property '%s' missing in entity", property.name) ) );
+				}
+
+				// Property not set but indicated as optional
+				if ( entityProperties[property.name] === undefined && property.optional === true ) {
+					if ( property.defaultValue === undefined ) {
+						switch( property.type ) {
+							case "integer": {
+								entityProperties[property.name] = 0;
+							}
+							break;
+							case "string": {
+								entityProperties[property.name] = "";
+							}
+							break;
+							case "boolean": {
+								entityProperties[property.name] = false;
+							}
+						}
+					} else {
+						let defaultValueType = typeof property.defaultValue;
+						defaultValueType = defaultValueType == 'number' ? 'integer' : defaultValueType;
+
+						if ( defaultValueType !== property.type ) {
+							reject( new Error( util.format( "Default value of '%s' is not of type expected '%s'", property.defaultValue, property.type )));
+						}
+
+						entityProperties[property.name] = property.defaultValue;
+					}
+				}
+			})
+
+			// Check properties types
+			check = this._checkProperties( entityProperties, entityName );
 
 			if ( !check.validated ) {
 				reject("One of more properties are invalid or missing: " + check.msg );
@@ -206,9 +241,9 @@ class BlueEntity {
 				var haddKey = this._getEntityKey(entityName, entityId);
 
 				// Insert for the same haddKey and entry by each property			
-				Object.keys(valuesToHset).forEach( (propertyName) => {
-					var propSchema = this._entitiesSchema[ this._getSchemaPropertyKey(entityName,propertyName) ];
-					var propertyValue = valuesToHset[propertyName];
+				Object.keys(entityProperties).forEach( (propertyName) => {
+					var propSchema = this._schemaPropertyKeys[ this._getSchemaPropertyKey(entityName,propertyName) ];
+					var propertyValue = entityProperties[propertyName];
 
 					switch(propSchema.type) {
 						case "boolean": {
@@ -269,7 +304,7 @@ class BlueEntity {
 					// Convert types, in Redis, all values are stores as string
 					Object.keys(result).map( (propertyName) => {
 						if ( propertyName !== "id" ) {
-							var propSchema = this._entitiesSchema[ this._getSchemaPropertyKey(entityName,propertyName) ];
+							var propSchema = this._schemaPropertyKeys[ this._getSchemaPropertyKey(entityName,propertyName) ];
 							var propertyValue = result[propertyName];
 
 							switch( propSchema.type ) {
@@ -305,10 +340,10 @@ class BlueEntity {
 		var key = this._getEntityKey(entityName, entityId);
 
 		return new Promise( (resolve,reject) => {
-			redisPromisified.exists( key )
-				.then( (exists) => { resolve(exists); })
+			redisPromisified.exists( key, this._redisClient )
+				.then( (exists) => { resolve(exists === 1); })
 				.catch( (err) => { reject(err); })
-		}
+		});
 	}
 
 	/*

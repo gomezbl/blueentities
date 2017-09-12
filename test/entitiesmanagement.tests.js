@@ -11,8 +11,8 @@ var baseSchema = [
 		properties: [
 			{ name: "filename", type: "string" },
 		    { name: "location", type: "string" },
-		    { name: "filetype", type: "string" },
-		    { name: "size", type: "integer" },
+		    { name: "filetype", type: "string", optional: true },
+		    { name: "size", type: "integer", optional: true, defaultValue: 20 },
 		    { name: "checked", type: "boolean" }
 		]}
 ]
@@ -100,11 +100,55 @@ describe( "Adding entities tests", (done) => {
 		}
 
 		blueEntities.addEntity( "img", entity )
-					.then( (id) => {					
+					.then( (id) => {
 						done( new Error("Exception expected in this test") );
 					})
 					.catch( (err) => {
 						done();
+					})
+	});
+
+	it( "# Add entity with optional value and no default value", (done) => {
+		let entity = {
+				filename: shortid.generate(),
+				location: shortid.generate(),
+				/* filetype: "png", filetype marked as optional in schema */
+				size: Math.floor(Math.random()*1000),
+				checked: true
+			}
+
+		blueEntities.addEntity( "img", entity )
+					.then( (id) => {
+						return blueEntities.getEntity( "img", id );						
+					})
+					.then( (r) => {
+						assert.equal( "", r.filetype );
+						done();
+					})
+					.catch( (err) => {
+						done(err);
+					})
+	});
+
+	it( "# Add entity with optional value and default value", (done) => {
+		let entity = {
+				filename: shortid.generate(),
+				location: shortid.generate(),
+				filetype: "png",
+				/* size: Math.floor(Math.random()*1000), size is marked in schema as optional and with default value of 20 */
+				checked: true
+			}
+
+		blueEntities.addEntity( "img", entity )
+					.then( (id) => {
+						return blueEntities.getEntity( "img", id )
+					})
+					.then( (r) => {
+						assert.equal( 20, r.size );
+						done();
+					})
+					.catch( (err) => {
+						done(err);
 					})
 	});
 
@@ -150,7 +194,7 @@ describe( "Adding entities tests", (done) => {
 		blueEntities.addEntity( "img", _getSampleEntity() )
 					.then( (id) => {
 						assert.isString(id);
-						return blueEntities.exists( id );
+						return blueEntities.existsEntity( "img", id );
 					})
 					.then( (exists) => {
 						assert.isBoolean( exists );
@@ -160,6 +204,16 @@ describe( "Adding entities tests", (done) => {
 					.catch( (err) => {
 						done(err);
 					})
+	});
+
+	it( "# Check entity no exists", (done) => {
+		blueEntities.existsEntity( "img", blueEntities.getUniqueId() )
+			.then( (exists) => {
+				assert.isBoolean( exists );
+				assert.isFalse( exists );
+				done();
+			})
+			.catch( (err) => { done(err); });
 	});
 });
 

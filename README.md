@@ -77,6 +77,8 @@ This is not a fully ORM solution based on Redis, but a module that allows to sim
 
 ### removeEntities( entityName, entitiesIds )
 
+### existsEntity( entityName, entityId )
+
 ### cleanSchemaEntities()
 
 ### getUniqueId()
