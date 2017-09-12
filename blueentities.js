@@ -10,8 +10,8 @@ var shortid = require("shortid");
 var util = require("util");
 const SEPARATORKEYS = ":";
 
-class BlueEntity {
-	constructor(schema, dbId, redisConfig) {
+class BlueEntities {
+	constructor(schema, dbId, redisConfig, module) {
 		this._redisClient = redis.createClient(redisConfig);
 		this._dbId = dbId ? dbId+":" : "";
 		this._redisConfig = redisConfig ? redisConfig : {};
@@ -485,5 +485,5 @@ class BlueEntity {
  * Creates a new instance of BlueEntity. Receives optional params for redis client.
  */
 module.exports = function(schema, dbId, redisConfig) {
-	return new BlueEntity(schema, dbId, redisConfig);
+	return new BlueEntities(schema, dbId, redisConfig, this);
 } 

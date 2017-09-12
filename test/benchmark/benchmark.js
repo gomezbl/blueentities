@@ -80,7 +80,11 @@ function benchMarkTest1() {
 	});
 }
 
+console.time("benchMarkTest1");
+
 benchMarkTest1().then( () => {
 	console.log("bechMarkTest1 done");
+	console.timeEnd("benchMarkTest1");
+	
 	blueEntities.shutdown();
 });
