@@ -439,14 +439,14 @@ class BlueEntities {
 	 *  entitiesIds: array with the entity ids to remove
 	 */
 	removeEntities( entityName, entitiesIds ) {
-		return new Promise( (response, reject) => {
+		return new Promise( (resolve, reject) => {
 			var removeEntityPro = entitiesIds.map( (entityId) => {
 				return this.removeEntity( entityName, entityId );
 			})
 
 			Promise.all( removeEntityPro )
 				   .then( (entitiesRemoved) => {
-				   		response();
+				   		resolve(entitiesIds.length);
 				   })
 				   .catch( (err) => { reject(err); })
 		});
