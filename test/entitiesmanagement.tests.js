@@ -462,3 +462,16 @@ describe( "update tests", () => {
 					});
 	})
 })
+
+describe( "Iterate test", () =>  {
+	it( "# Basic iteration", (done) => {
+		let fnc = function(entity) {
+			console.log(entity);
+		}
+		blueEntities.iterateAll( "img", fnc )
+			.then( () => {
+				done()
+			})
+			.catch( (err) => { console.log(err); })
+	})
+});

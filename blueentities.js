@@ -510,6 +510,29 @@ class BlueEntities {
 	shutdown() {
 		this._redisClient.quit();
 	}
+
+	iterateAll( entityName, fnc ) {
+		return new Promise( (resolve,reject) => {
+			this.getCount(entityName)
+				.then( (count) => {
+					const PAGECOUNT = 25;
+					let fncCalled = 0;
+
+					for( let i = 0; i < count; i+=PAGECOUNT) {
+						this.getRange( entityName, i, i+PAGECOUNT-1 )
+							.then( (entities) => {
+								entities.forEach( (e) => {
+									fnc(e);
+									fncCalled++;
+									if ( fncCalled == count ) resolve();
+								});
+							})
+							.catch( (err) => { reject(err); })							
+					}
+				})
+				.catch( (err) => { reject(err); })
+		});
+	}
 }
 
 /*
