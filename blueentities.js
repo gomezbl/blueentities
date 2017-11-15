@@ -433,6 +433,37 @@ class BlueEntities {
 	}
 
 	/*
+	 * Updates and entity property value
+	 * Params:
+	 *    entityName: name of the entity
+	 *	  entityId: id of the entity
+	 *    propertyName: name of the property of the entity
+	 *    propertyValue: new value for the property
+	 */
+	updateEntityValue( entityName, entityId, propertyName, propertyValue ) {
+		return new Promise( (resolve,reject) => {
+			let p = this._checkProperty( propertyName, propertyValue, entityName );
+			
+			if ( !p.validated ) {
+				reject( new Error(util.format("Invalid property name or value. Property name: %s. Property value: %s. Error: %s", propertyName, propertyValue, p.msg )));
+			} else {
+				this.existsEntity(entityName, entityId)
+					.then( (exists) => {
+						if ( !exists ) throw new Error(util.format("Entity doesn't exist. Entity name: %s. Entity ID: %s", entityName, entityId));
+						else {
+							var haddKey = this._getEntityKey(entityName, entityId);
+
+							return redisPromisified.hset( haddKey, propertyName, propertyValue, this._redisClient );
+						}
+					})
+					.then( () => {
+						resolve();
+					})
+					.catch( (err) => { reject(err); })
+			}
+		});
+	}
+	/*
 	 * Remove a number of entity instances
 	 * Params:
 	 * 	entityName: name of the entity

@@ -411,3 +411,54 @@ describe( "generate new ids test", () => {
 		}
 	});
 });
+
+describe( "update tests", () => {
+	it( "# Update property", (done) => {
+		let entity = _getSampleEntity();
+		let entityId;
+		let newPropertyValue = "newfiletype";
+
+		blueEntities.addEntity( "img", entity )
+					.then( (id) => {
+						entityId = id;
+						return blueEntities.updateEntityValue( "img", id, "filetype", newPropertyValue );
+					})
+					.then( () => {
+						return blueEntities.getEntity( "img", entityId );
+					})
+					.then( (e) => {
+						assert.equal( newPropertyValue, e.filetype );
+						done();
+					})
+					.catch( (err) => {
+						done(err);
+					})		
+	});
+
+	it( "# Try to update no existing entity", (done) => {
+		blueEntities.updateEntityValue( "img", "fooid", "filetype", "foo" )
+			.then( () => {
+				assert.isTrue(false);
+			})
+			.catch( (err) => {
+				done();
+			})
+	});
+
+	it( "# Update value with invalid type", (done) => {
+		let entity = _getSampleEntity();
+		let entityId;
+
+		blueEntities.addEntity( "img", entity )
+					.then( (id) => {
+						entityId = id;
+						return blueEntities.updateEntityValue( "img", id, "checked", "string value" );
+					})
+					.then( () => {
+						assert.isTrue(false);
+					})
+					.catch( (err) => {
+						done();
+					});
+	})
+})
