@@ -157,6 +157,37 @@ class BlueEntities {
 		});
 	}
 
+	_translatePropertyValueToWrite(entityName, propertyName, propertyValue) {
+		let propSchema = this._schemaPropertyKeys[ this._getSchemaPropertyKey(entityName,propertyName) ];
+		let pv = propertyValue;
+
+		switch(propSchema.type) {
+			case "boolean": {
+				pv = pv === true ? 1 : 0;
+			}
+			break;
+		}
+
+		return pv;
+	}
+
+	_translatePropertyValueToRead(entityName, propertyName, propertyValue) {
+		let propSchema = this._schemaPropertyKeys[ this._getSchemaPropertyKey(entityName,propertyName) ];
+		let pv = propertyValue;
+
+		switch( propSchema.type ) {
+			case "integer": {
+				pv = parseInt( propertyValue );
+			}
+			break;
+			case "boolean": {
+				pv = propertyValue === "1";
+			}
+			break;
+		}		
+
+		return pv;
+	}
 	/*
 	 * Adds a new entity schema
 	 * Params: entity with this json format:
@@ -259,15 +290,7 @@ class BlueEntities {
 
 				// Insert for the same haddKey and entry by each property			
 				Object.keys(entityProperties).forEach( (propertyName) => {
-					var propSchema = this._schemaPropertyKeys[ this._getSchemaPropertyKey(entityName,propertyName) ];
-					var propertyValue = entityProperties[propertyName];
-
-					switch(propSchema.type) {
-						case "boolean": {
-							propertyValue = propertyValue === true ? 1 : 0;
-						}
-						break;
-					}
+					let propertyValue = this._translatePropertyValueToWrite(entityName, propertyName, entityProperties[propertyName] );
 
 					promises.push( redisPromisified.hset( haddKey, propertyName, propertyValue, this._redisClient ));
 				});
@@ -321,19 +344,7 @@ class BlueEntities {
 					// Convert types, in Redis, all values are stores as string
 					Object.keys(result).map( (propertyName) => {
 						if ( propertyName !== "id" ) {
-							var propSchema = this._schemaPropertyKeys[ this._getSchemaPropertyKey(entityName,propertyName) ];
-							var propertyValue = result[propertyName];
-
-							switch( propSchema.type ) {
-								case "integer": {
-									result[propertyName] = parseInt( propertyValue );
-								}
-								break;
-								case "boolean": {
-									result[propertyName] = propertyValue === "1";
-								}
-								break;
-							}
+							result[propertyName] = this._translatePropertyValueToRead(entityName, propertyName, result[propertyName]);
 						}
 					})
 
@@ -468,9 +479,10 @@ class BlueEntities {
 					.then( (exists) => {
 						if ( !exists ) throw new Error(util.format("Entity doesn't exist. Entity name: %s. Entity ID: %s", entityName, entityId));
 						else {
-							var haddKey = this._getEntityKey(entityName, entityId);
+							let haddKey = this._getEntityKey(entityName, entityId);
+							let pv = this._translatePropertyValueToWrite(entityName, propertyName, propertyValue );
 
-							return redisPromisified.hset( haddKey, propertyName, propertyValue, this._redisClient );
+							return redisPromisified.hset( haddKey, propertyName, pv, this._redisClient );
 						}
 					})
 					.then( () => {

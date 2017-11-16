@@ -461,6 +461,21 @@ describe( "update tests", () => {
 						done();
 					});
 	})
+
+	it( "# Update bollean value", (done) => {
+		let entity = _getSampleEntity();
+		let entityId;
+
+		blueEntities.addEntity( "img", entity )
+					.then( (id) => {
+						entityId = id;
+						return blueEntities.updateEntityValue( "img", id, "checked", true );
+					})
+					.then( () => {
+						done();
+					})
+					.catch( (err) => { done(err); } );
+	})
 })
 
 describe( "Iterate test", () =>  {
