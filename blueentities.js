@@ -8,6 +8,8 @@ var redis = require("redis");
 var redisPromisified = require("./lib/redispromisified.js");
 var shortid = require("shortid");
 var util = require("util");
+var sequential = require("promise-sequential");
+
 const SEPARATORKEYS = ":";
 
 class BlueEntities {
@@ -140,6 +142,21 @@ class BlueEntities {
 
 		return { validated: true };
 	}
+
+	_getRangeToFunction(entityName, start, stop, fnc) {
+		return () => new Promise( (resolve,reject) => {
+			this.getRange( entityName, start, stop )
+				.then( (entities) => {
+					entities.forEach( (e) => {
+						fnc(e);
+					});
+
+					resolve();
+				})
+				.catch( (err) => { reject(err); })				
+		});
+	}
+
 	/*
 	 * Adds a new entity schema
 	 * Params: entity with this json format:
@@ -511,26 +528,57 @@ class BlueEntities {
 		this._redisClient.quit();
 	}
 
+	/*
+	 * Iterates over all entities of entityName type and calls fnc function with the entity instance.
+	 * Params:
+	 *   entityName: name of the entity to iterate over
+	 *   fnc: function to be called for each entity as parameter
+	 * Notes: fnc shouldn't return a promise. Consider that this operation scans
+	 * all entities.
+	 */
 	iterateAll( entityName, fnc ) {
 		return new Promise( (resolve,reject) => {
 			this.getCount(entityName)
 				.then( (count) => {
 					const PAGECOUNT = 25;
 					let fncCalled = 0;
+					let getRangePromises = [];
 
 					for( let i = 0; i < count; i+=PAGECOUNT) {
-						this.getRange( entityName, i, i+PAGECOUNT-1 )
-							.then( (entities) => {
-								entities.forEach( (e) => {
-									fnc(e);
-									fncCalled++;
-									if ( fncCalled == count ) resolve();
-								});
-							})
-							.catch( (err) => { reject(err); })							
+						getRangePromises.push( this._getRangeToFunction(entityName, i, i+PAGECOUNT-1, fnc) );
 					}
+
+					
+					return sequential(getRangePromises);
+				})
+				.then( () => {
+					resolve();
 				})
 				.catch( (err) => { reject(err); })
+		});
+	}
+
+	/*
+	 * Iterates over all entities of type entityName and returns
+	 * all that propertyName matches with propertyValue
+	 * Params:
+	 *   entityName: name of the entity to iterate over
+	 *   propertyName: name of the property to check
+	 *   propertyValue: value of the property to find
+	 * Returns: returns an array with all entities matches
+	 * Note: consider that like iterateAll, this method iterates over all entities of entityName type
+	 */
+	findEqual( entityName, propertyName, propertyValue ) {
+		return new Promise( (resolve, reject) => {
+			let result = [];
+
+			this.iterateAll( entityName, (entity) => {
+					if ( entity[propertyName] === propertyValue ) { result.push(entity); }
+				})
+			    .then( () => {
+			    	resolve(result);
+			    })
+			    .catch( (err) => { reject(err); } );
 		});
 	}
 }

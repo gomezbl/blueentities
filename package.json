@@ -19,6 +19,7 @@
   "homepage": "https://github.com/gomezbl/blueentities#readme",
   "dependencies": {
     "chai": "^4.0.2",
+    "promise-sequential": "^1.1.1",
     "redis": "^2.7.1",
     "shortid": "^2.2.8"
   }

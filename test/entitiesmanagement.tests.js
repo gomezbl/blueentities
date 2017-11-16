@@ -465,13 +465,33 @@ describe( "update tests", () => {
 
 describe( "Iterate test", () =>  {
 	it( "# Basic iteration", (done) => {
-		let fnc = function(entity) {
-			
-		}
-		blueEntities.iterateAll( "img", fnc )
+		blueEntities.iterateAll( "img", (entity) => {} )
 			.then( () => {
 				done()
 			})
 			.catch( (err) => { console.log(err); })
+	})
+
+	it( "# Check count", (done) => {
+		let c;
+		let c2 = 0;
+		blueEntities.getCount( "img" )
+			.then( (count )=> {
+				c = count;
+				return blueEntities.iterateAll( "img", () => { c2++; } );
+			})
+			.then( () => {
+				assert.equal(c, c2);
+				done();
+			})
+			.catch( (err) => { done(err); } );
+	})
+
+	it( "# Find equal", (done) => {
+		blueEntities.findEqual( "img", "filetype", "png" )
+			.then( (results) => {
+				done();
+			})
+			.catch( (err) => { done(err); })
 	})
 });
