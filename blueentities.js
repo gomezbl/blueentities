@@ -418,8 +418,19 @@ class BlueEntities {
 						   			rr[ entity.id ] = entity;
 						   		})
 
-						   		// Retrieve objects to be return in orde
-						   		resolve( Object.keys(rr).map( (k) => { return rr[k]; }) );
+						   		// Retrieve objects to be return in order
+						   		let finalEntities = Object.keys(rr).map( (k) => { return rr[k]; });
+								
+								// Convert types, in Redis, all values are stores as string								
+								finalEntities.map( (ent) => {									
+									Object.keys(ent).map( (propertyName) => {
+										if ( propertyName !== "id" ) {
+											ent[propertyName] = this._translatePropertyValueToRead(entityName, propertyName, ent[propertyName]);
+										}
+									})									
+								});
+
+								resolve(finalEntities);
 						   }, (err) => { reject(err); });
 					})
 				.catch( (err) => { reject(err); });
@@ -559,7 +570,6 @@ class BlueEntities {
 					for( let i = 0; i < count; i+=PAGECOUNT) {
 						getRangePromises.push( this._getRangeToFunction(entityName, i, i+PAGECOUNT-1, fnc) );
 					}
-
 					
 					return sequential(getRangePromises);
 				})
